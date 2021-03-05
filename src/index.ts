@@ -23,15 +23,18 @@ class MyClass {
     y = 5
 }
 
-type CustomPick<T, K extends keyof T> = {
-    [P in K]: T[P]
-}
+type CustomExtract<T, U> = T extends U ? T : never
+type CustomExclude<T, U> = T extends U ? never : T
 
-const a: CustomPick<ObjScore, 'score'> = {
-    score: 44,
-    name: 'fdass'
-}
-const b: Pick<ObjScore, 'score'> = {
-    score: 44,
-    name: 'sdfasf'
-}
+type U1 = 'a' | 'b' | 'c'
+type U2 = 'x' | 'z' | 'b'
+type U3 = 'c' | 'z' | 'b'
+
+const a: CustomExtract<U1, U2>
+const b: CustomExclude<U1, U2>
+
+const c: CustomExtract<U2, U3>
+const d: CustomExclude<U2, U3>
+
+const e: CustomExtract<U3, U2>
+const f: CustomExclude<U3, U2>
