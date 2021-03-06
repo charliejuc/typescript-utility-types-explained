@@ -22,15 +22,29 @@ class MyClass {
     y = 5
 }
 
-type CustomPick<T, K extends keyof T> = {
-    [P in K]: T[P]
-}
-type CustomExtract<T, U> = T extends U ? T : never
-type CustomExclude<T, U> = T extends U ? never : T
+const myFunc = (a: number, b: string, ...args: number[]): number =>
+    a + b.length + args.reduce((acc: number, current: number) => acc + current)
 
-type CustomOmit<T, K extends keyof T> = CustomPick<T, CustomExclude<keyof T, K>>
+type CustomParameters<F extends (...args: never[]) => unknown> = F extends (
+    ...args: infer P
+) => unknown
+    ? P
+    : never
 
-const a: CustomOmit<ObjScore, 'score' | 'id'> = {
-    id: 1,
-    score: 33
-}
+const parameters: CustomParameters<typeof myFunc> = [3, 'hey', 4]
+// parameters with spread operator need to be strictly typed
+const badParameters /*: [number, string] */ = [3, 'fsdaf']
+
+const a: CustomParameters<typeof myFunc>[0] = 7
+const b: Parameters<typeof myFunc>[1] = 'bye'
+
+console.log(myFunc(...parameters))
+
+// error with spread operator is not so useful
+myFunc(...badParameters)
+
+myFunc(a, b)
+myFunc(a, 4)
+
+const x: CustomParameters<any>
+const y: CustomParameters<Function>
