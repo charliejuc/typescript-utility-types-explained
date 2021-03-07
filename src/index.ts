@@ -18,33 +18,38 @@ const obj1: ObjScore & {
 }
 
 class MyClass {
-    x = 3
-    y = 5
+    x: number
+    y: string
+
+    constructor(x: number, y: string) {
+        this.x = x
+        this.y = y
+    }
 }
 
 const myFunc = (a: number, b: string, ...args: number[]): number =>
     a + b.length + args.reduce((acc: number, current: number) => acc + current)
 
-type CustomParameters<F extends (...args: never[]) => unknown> = F extends (
+type CustomConstructorParameters<C extends new (...args: never[]) => unknown> = C extends new (
     ...args: infer P
 ) => unknown
     ? P
     : never
 
-const parameters: CustomParameters<typeof myFunc> = [3, 'hey', 4]
+const parameters: CustomConstructorParameters<typeof MyClass> = [3, 'hey']
 // parameters with spread operator need to be strictly typed
 const badParameters /*: [number, string] */ = [3, 'fsdaf']
 
-const a: CustomParameters<typeof myFunc>[0] = 7
-const b: Parameters<typeof myFunc>[1] = 'bye'
+const a: CustomConstructorParameters<typeof MyClass>[0] = 7
+const b: ConstructorParameters<typeof MyClass>[1] = 'bye'
 
 console.log(myFunc(...parameters))
 
 // error with spread operator is not so useful
-myFunc(...badParameters)
+new MyClass(...badParameters)
 
-myFunc(a, b)
-myFunc(a, 4)
+new MyClass(a, b)
+new MyClass(a, 4)
 
-const x: CustomParameters<any>
-const y: CustomParameters<Function>
+const x: CustomConstructorParameters<any>
+const y: CustomConstructorParameters<Function>
