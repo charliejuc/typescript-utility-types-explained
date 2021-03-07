@@ -17,6 +17,9 @@ const obj1: ObjScore & {
     }
 }
 
+const myFunc = (a: number, b: string, ...args: number[]): number =>
+    a + b.length + args.reduce((acc: number, current: number) => acc + current)
+
 class MyClass {
     x: number
     y: string
@@ -27,17 +30,19 @@ class MyClass {
     }
 }
 
-const myFunc = (a: number, b: string, ...args: number[]): number =>
-    a + b.length + args.reduce((acc: number, current: number) => acc + current)
+const instance1: MyClass = new MyClass(3, 'sfsf')
+const instance2: typeof instance1 = instance1
+const instance3: InstanceType<typeof MyClass> = instance1
 
-type CustomReturnType<F extends (...args: never[]) => unknown> = F extends (
+type CustomInstanceType<C extends new (...args: never[]) => unknown> = C extends new (
     ...args: never[]
-) => infer R
-    ? R
+) => infer IT
+    ? IT
     : never
 
-const parameters: CustomReturnType<typeof myFunc> = myFunc(5, 'fsfds')
+const instanceTypeFunc = <C extends new (...args: never[]) => CustomInstanceType<C>>(
+    _class: C,
+    ...constructorParameters: ConstructorParameters<C>
+): CustomInstanceType<C> => new _class(...constructorParameters)
 
-const x: ReturnType<any>
-const y: CustomReturnType<any>
-const z: CustomReturnType<Function>
+const myClassInstance = instanceTypeFunc(MyClass, 5, 'sdfsaf')
