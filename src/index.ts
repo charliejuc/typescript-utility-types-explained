@@ -27,42 +27,44 @@ class MyClass {
     }
 }
 
-// watch in playground: http://bit.ly/3rs5DZo
-function myFunc(this: { start: number }, a: number, b: string): number {
-    return this.start + a + b.length
+type VueObjectDescriptor<Data, Methods> = {
+    data: () => Data
+    methods: Methods & ThisType<Data & Methods>
 }
 
-type CustomThisParameterType<F> = F extends (this: infer This, ...args: never[]) => unknown
-    ? This
-    : unknown
+const CreateVueComponent = <
+    Data extends Record<string, unknown>,
+    Methods extends Record<string, (...args: never[]) => unknown>
+>(
+    obj: VueObjectDescriptor<Data, Methods>
+): Data & Methods => ({
+    ...(obj.data() || {}),
+    ...(obj.methods || {})
+})
 
-// type CustomOmitThisParameter<F extends (...args: never[]) => unknown> = F extends (
-//     this: never,
-//     ...args: infer A
-// ) => infer R
-//     ? (...args: A) => R
-//     : F
-
-/*** typescript automatically exclude this parameter when we use infer keyword ***/
-type CustomOmitThisParameter<F> = unknown extends CustomThisParameterType<F>
-    ? F
-    : F extends (...args: infer A) => infer R
-    ? (...args: A) => R
-    : F
-
-const a: ThisParameterType<typeof myFunc>
-const a1: CustomThisParameterType<typeof myFunc>
-
-const b: Parameters<typeof myFunc>
-
-const c: typeof myFunc
-// removes this parameter from IDE hints
-const c1: OmitThisParameter<typeof myFunc>
-const c2: CustomOmitThisParameter<typeof myFunc>
-
-function myHighOrderFunc(f: OmitThisParameter<typeof myFunc>): typeof myFunc {
-    return f
+type Data = {
+    x: number
+    y: string
 }
+type Methods = {
+    sum: () => number
+}
+const componentObject: VueObjectDescriptor<Data, Methods> = {
+    data: (): Data => ({
+        x: 1,
+        y: 'hey'
+    }),
+    methods: {
+        sum(): ReturnType<Methods['sum']> {
+            return this.x + this.y.length
+        },
+        t: 5,
+        // arrow functions has not this object
+        sum1: (): number => {
+            return this.x + this.y.length
+        }
+    }
+}
+const component = CreateVueComponent(componentObject)
 
-const d: CustomOmitThisParameter<typeof myHighOrderFunc>
-const d1: OmitThisParameter<typeof myHighOrderFunc>
+console.log(component.sum())
