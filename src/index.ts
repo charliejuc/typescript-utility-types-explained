@@ -17,9 +17,6 @@ const obj1: ObjScore & {
     }
 }
 
-const myFunc = (a: number, b: string, ...args: number[]): number =>
-    a + b.length + args.reduce((acc: number, current: number) => acc + current)
-
 class MyClass {
     x: number
     y: string
@@ -30,19 +27,42 @@ class MyClass {
     }
 }
 
-const instance1: MyClass = new MyClass(3, 'sfsf')
-const instance2: typeof instance1 = instance1
-const instance3: InstanceType<typeof MyClass> = instance1
+// watch in playground: http://bit.ly/3rs5DZo
+function myFunc(this: { start: number }, a: number, b: string): number {
+    return this.start + a + b.length
+}
 
-type CustomInstanceType<C extends new (...args: never[]) => unknown> = C extends new (
-    ...args: never[]
-) => infer IT
-    ? IT
-    : never
+type CustomThisParameterType<F> = F extends (this: infer This, ...args: never[]) => unknown
+    ? This
+    : unknown
 
-const instanceTypeFunc = <C extends new (...args: never[]) => CustomInstanceType<C>>(
-    _class: C,
-    ...constructorParameters: ConstructorParameters<C>
-): CustomInstanceType<C> => new _class(...constructorParameters)
+// type CustomOmitThisParameter<F extends (...args: never[]) => unknown> = F extends (
+//     this: never,
+//     ...args: infer A
+// ) => infer R
+//     ? (...args: A) => R
+//     : F
 
-const myClassInstance = instanceTypeFunc(MyClass, 5, 'sdfsaf')
+/*** typescript automatically exclude this parameter when we use infer keyword ***/
+type CustomOmitThisParameter<F> = unknown extends CustomThisParameterType<F>
+    ? F
+    : F extends (...args: infer A) => infer R
+    ? (...args: A) => R
+    : F
+
+const a: ThisParameterType<typeof myFunc>
+const a1: CustomThisParameterType<typeof myFunc>
+
+const b: Parameters<typeof myFunc>
+
+const c: typeof myFunc
+// removes this parameter from IDE hints
+const c1: OmitThisParameter<typeof myFunc>
+const c2: CustomOmitThisParameter<typeof myFunc>
+
+function myHighOrderFunc(f: OmitThisParameter<typeof myFunc>): typeof myFunc {
+    return f
+}
+
+const d: CustomOmitThisParameter<typeof myHighOrderFunc>
+const d1: OmitThisParameter<typeof myHighOrderFunc>
